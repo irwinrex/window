@@ -18,12 +18,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
-      - ~/Documents/keys/:/root/.ssh:ro
+      - backend:/mnt/data
     environment:
       VAULT_ADDR: "http://vault:8200"
       VAULT_TOKEN: "EeZGlSEjcD9rw5oOzV4W%"
+      DOWNLOAD_DIR: "/mnt/data"
     ports:
       - "8000:8000"
+    depends_on:
+      - vault
 
   frontend:
     build:
@@ -34,4 +37,6 @@ services:
 
 volumes:
   vault:
+    driver: local
+  backend:
     driver: local

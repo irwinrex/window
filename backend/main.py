@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form, UploadFile, HTTPException
+from fastapi import FastAPI, Form, UploadFile, HTTPException, File
 from pydantic import BaseModel
 import hvac
 import os
@@ -22,12 +22,9 @@ async def upload_secrets(
     target_host: str = Form(...),
     username_bastion: str = Form(...),
     username_target: str = Form(...),
-    bastion_key_file: str = Form(...),
-    target_key_file: str = Form(...),
+    bastion_key_file: UploadFile = File(...),
+    target_key_file: UploadFile = File(...),
 ):
-    if not bastion_key_file or not target_key_file:
-        raise HTTPException(status_code=400, detail="Both bastion_key_file and target_key_file are required")
-
     bastion_key_content = (await bastion_key_file.read()).decode()
     target_key_content = (await target_key_file.read()).decode()
 
@@ -94,4 +91,14 @@ async def download_file(
         target_key_content=secrets['target_key'],
         remote_path=remote_path
     )
-    return {"content": content}
+    # return {"content": content}
+    # Load env and construct full path
+    download_dir = os.getenv("DOWNLOAD_DIR", "/tmp")
+    filename = os.path.basename(remote_path)
+    output_path = os.path.join(download_dir, f"{target_id}_{filename}")
+
+    # Save content
+    with open(output_path, "w") as f:
+        f.write(content)
+
+    return {"status": "downloaded", "saved_to": output_path}
