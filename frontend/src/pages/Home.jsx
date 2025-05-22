@@ -1,17 +1,18 @@
 // src/pages/Home.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Download, Upload, Edit3, Plus } from 'lucide-react';
 
-const Tile = ({ title, onClick, color, icon }) => (
+const Tile = ({ title, onClick, Icon, iconColor }) => (
   <div
     role="button"
     tabIndex={0}
     onClick={onClick}
     onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
-    className={`cursor-pointer rounded-2xl shadow-xl p-6 text-white text-center font-semibold text-lg hover:scale-105 transition-transform duration-300 ease-in-out ${color} animate-fade`}
+    className="cursor-pointer rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all shadow-md p-8 text-center text-gray-900 dark:text-gray-100 animate-fade group"
   >
-    <div className="text-4xl mb-3">{icon}</div>
-    <span>{title}</span>
+    <Icon className={`mx-auto mb-4 h-8 w-8 ${iconColor} group-hover:scale-110 transition-transform`} />
+    <span className="text-base font-semibold">{title}</span>
   </div>
 );
 
@@ -19,33 +20,33 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
-      <h1 className="text-3xl font-bold text-blue-700 mb-10 animate-slide">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-500 text-gray-900 dark:text-gray-100 flex flex-col items-center justify-center px-4 py-10 relative">
+      <h1 className="text-3xl md:text-4xl font-bold mb-12 animate-slide text-center tracking-tight">
         Secure Server Manager
       </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-3xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-4xl">
         <Tile
           title="Fetch File"
-          icon="📥"
-          color="bg-blue-500 hover:bg-blue-600"
+          Icon={Download}
+          iconColor="text-blue-500 dark:text-blue-400"
           onClick={() => navigate('/fetch')}
         />
         <Tile
           title="Update File"
-          icon="📤"
-          color="bg-green-500 hover:bg-green-600"
+          Icon={Upload}
+          iconColor="text-green-500 dark:text-green-400"
           onClick={() => navigate('/update')}
         />
         <Tile
           title="Edit File"
-          icon="📝"
-          color="bg-purple-500 hover:bg-purple-600"
+          Icon={Edit3}
+          iconColor="text-purple-500 dark:text-purple-400"
           onClick={() => navigate('/edit')}
         />
         <Tile
           title="Add Server"
-          icon="➕"
-          color="bg-orange-500 hover:bg-orange-600"
+          Icon={Plus}
+          iconColor="text-orange-500 dark:text-orange-400"
           onClick={() => navigate('/add-server')}
         />
       </div>

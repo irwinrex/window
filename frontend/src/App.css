@@ -1,3 +1,4 @@
+/* App.css
 /* Tailwind base imports should go in your main CSS (e.g. index.css) or via your PostCSS setup */
 /* Uncomment these if you want to import Tailwind in this file (usually done once globally) */
 @tailwind base;
@@ -71,4 +72,8 @@ textarea.file-editor-textarea:focus {
   outline: none;
   border-color: #0ea5e9; /* Tailwind sky-500 */
   box-shadow: 0 0 0 2px #38bdf8; /* approximate ring-2 sky-500 */
+}
+
+body {
+  font-family: 'Inter', sans-serif;
 }
