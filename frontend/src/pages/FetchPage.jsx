@@ -1,64 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const FetchPage = () => {
-  const [targetId, setTargetId] = useState('');
-  const [remotePath, setRemotePath] = useState('');
-  const [content, setContent] = useState('');
-  const [status, setStatus] = useState('');
-  const [error, setError] = useState('');
+  const [targetId, setTargetId] = useState("");
+  const [remotePath, setRemotePath] = useState("");
+  const [content, setContent] = useState("");
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
 
-  const handleFetch = async () => {
-    setError('');
-    setStatus('');
+  const getFilename = (path) => {
+    return path.split("/").filter(Boolean).pop() || "";
+  };
+
+  const downloadFile = async (targetId, remotePath) => {
+    const url = `http://localhost:8000/download-file/${targetId}`;
     const formData = new FormData();
-    formData.append('remote_path', remotePath);
+    formData.append("remote_path", remotePath);
 
-    try {
-      const response = await fetch(`http://localhost:8000/download-file/${targetId}`, {
-        method: 'POST',
-        body: formData,
-      });
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
 
-      if (!response.ok) throw new Error(`Fetch failed: ${response.statusText}`);
-
-      const data = await response.json();
-      if (data.content) {
-        setContent(data.content);
-        setStatus(`File fetched from ${remotePath}`);
-      } else {
-        throw new Error('No content received from server.');
-      }
-    } catch (err) {
-      setError(err.message);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Download failed: ${response.status} ${text}`);
     }
   };
 
+  const fetchFileContent = async (targetId, filename) => {
+    const url = `http://localhost:8000/fetch-file/${targetId}?filename=${encodeURIComponent(filename)}`;
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        return await response.text();
+      }
+      if (response.status === 404) {
+        throw new Error("FileNotFound");
+      }
+      throw new Error(`Fetch failed with status ${response.status}`);
+    } catch (err) {
+      // Network or other errors
+      throw new Error("FetchFailed");
+    }
+  };
+
+  const handleFetch = async () => {
+    setError("");
+    setStatus("");
+    setContent("");
+
+    if (!targetId.trim() || !remotePath.trim()) {
+      setError("Target ID and Remote Path are required");
+      return;
+    }
+
+    const filename = getFilename(remotePath);
+
+    if (!filename) {
+      setError("Invalid remote path, cannot extract filename");
+      return;
+    }
+
+    try {
+      setStatus("Checking Vault for file...");
+      const fileContent = await fetchFileContent(targetId, filename);
+      setContent(fileContent);
+      setStatus(`File loaded from Vault: ${filename}`);
+    } catch (fetchErr) {
+      // For file not found or fetch failure, start download
+      setStatus("File not found or fetch failed. Download started...");
+      try {
+        await downloadFile(targetId, remotePath);
+        setStatus("Download successful. Fetching file from Vault...");
+        const fileContent = await fetchFileContent(targetId, filename);
+        setContent(fileContent);
+        setStatus(`File loaded after download: ${filename}`);
+      } catch (downloadErr) {
+        setError(downloadErr.message || "Download failed");
+        setStatus("");
+      }
+    }
+  };
+
+
   return (
-    <div className="p-6 max-w-3xl mx-auto animate-fade">
-      <h2 className="text-2xl font-bold text-blue-700 mb-4">Fetch File</h2>
+    <div className="p-6 max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Fetch File</h2>
 
       {error && (
-        <div className="bg-red-500 text-white p-3 rounded mb-4 shadow animate-shake">
+        <div className="bg-red-500 text-white p-3 rounded mb-4">
           <span>{error}</span>
         </div>
       )}
 
       <div className="flex flex-col gap-4 mb-6">
         <input
-          className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Target ID (Server)"
           value={targetId}
           onChange={(e) => setTargetId(e.target.value)}
+          className="p-2 border rounded"
         />
         <input
-          className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-          placeholder="Remote Path (e.g., /tmp/test.txt)"
+          placeholder="Remote Path (e.g., /opt/secrets/secrets.env)"
           value={remotePath}
           onChange={(e) => setRemotePath(e.target.value)}
+          className="p-2 border rounded"
         />
         <button
           onClick={handleFetch}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow"
+          className="bg-blue-600 text-white py-2 rounded"
         >
           Fetch File
         </button>
@@ -67,9 +117,9 @@ const FetchPage = () => {
       {status && <p className="text-green-600 mb-4">{status}</p>}
 
       {content && (
-        <div className="bg-gray-800 text-gray-100 p-4 rounded overflow-auto whitespace-pre-wrap font-mono">
+        <pre className="bg-gray-800 text-white p-4 rounded whitespace-pre-wrap overflow-auto">
           {content}
-        </div>
+        </pre>
       )}
     </div>
   );
