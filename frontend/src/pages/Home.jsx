@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, Edit3, Plus } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle.jsx';
 
 const Tile = ({ title, onClick, Icon, iconColor }) => (
   <div
@@ -20,11 +21,12 @@ export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-500 text-gray-900 dark:text-gray-100 flex flex-col items-center justify-center px-4 py-10 relative">
+    <div className="min-h-screen w-full bg-white dark:bg-gray-900 transition-colors duration-500 text-gray-900 dark:text-gray-100 flex flex-col items-center justify-center px-4 py-10 relative">
+      <ThemeToggle />
       <h1 className="text-3xl md:text-4xl font-bold mb-12 animate-slide text-center tracking-tight">
         Secure Server Manager
       </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-4xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-8 w-full max-w-5xl">
         <Tile
           title="Fetch File"
           Icon={Download}

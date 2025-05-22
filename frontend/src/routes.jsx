@@ -7,12 +7,13 @@ import FetchPage from './pages/FetchPage.jsx';
 import UpdatePage from './pages/UpdatePage.jsx';
 import EditPage from './pages/EditPage.jsx';
 import AddServerPage from './pages/AddServerPage.jsx';
+import VaultFileEditor from './pages/VaultFileEditor.jsx';
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/fetch" element={<FetchPage />} />
+      <Route path="/fetch" element={<VaultFileEditor />} />
       <Route path="/update" element={<UpdatePage />} />
       <Route path="/edit" element={<EditPage />} />
       <Route path="/add-server" element={<AddServerPage />} />
