@@ -105,7 +105,7 @@ const ActionButton = ({
     secondary:
       "bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 focus:ring-gray-500 disabled:bg-gray-400 dark:disabled:bg-gray-500 disabled:cursor-not-allowed",
     success:
-      "bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 disabled:bg-green-400 disabled:cursor-not-allowed",
+      "bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 disabled:bg-green-400 disabled:cursor-not-allowed border border-green-700 shadow-green-300/30 hover:shadow-green-400/40 ",
     warning:
       "bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-400 disabled:bg-amber-300 disabled:cursor-not-allowed",
     danger:
