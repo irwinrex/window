@@ -17,6 +17,10 @@
   }
 }
 
+[aria-label="Codeium Logo"] {
+  display: none !important;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

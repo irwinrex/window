@@ -126,8 +126,8 @@ export default function Home() {
 
   const tilesData = [
     { title: "Fetch File", Icon: Download, iconColor: "text-sky-500 dark:text-sky-400", path: '/fetch' },
-    { title: "Update File", Icon: Upload, iconColor: "text-emerald-500 dark:text-emerald-400", path: '/update' },
-    { title: "Edit File", Icon: Edit3, iconColor: "text-violet-500 dark:text-violet-400", path: '/edit' },
+    // { title: "Update File", Icon: Upload, iconColor: "text-emerald-500 dark:text-emerald-400", path: '/update' },
+    // { title: "Edit File", Icon: Edit3, iconColor: "text-violet-500 dark:text-violet-400", path: '/edit' },
     { title: "Add Server", Icon: Plus, iconColor: "text-amber-500 dark:text-amber-400", path: '/add-server' },
   ];
 
