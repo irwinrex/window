@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Install dependencies first
 COPY package*.json ./
+RUN npm update
 RUN npm install
 
 # # Install Tailwind and PostCSS
@@ -18,7 +19,6 @@ COPY . .
 
 # Build the app (assuming Tailwind is used in build step)
 RUN npm run build
-
 
 # Stage 2: Serve the built app with a smaller image
 FROM node:22-alpine
