@@ -126,8 +126,6 @@ export default function Home() {
 
   const tilesData = [
     { title: "Fetch File", Icon: Download, iconColor: "text-sky-500 dark:text-sky-400", path: '/fetch' },
-    // { title: "Update File", Icon: Upload, iconColor: "text-emerald-500 dark:text-emerald-400", path: '/update' },
-    // { title: "Edit File", Icon: Edit3, iconColor: "text-violet-500 dark:text-violet-400", path: '/edit' },
     { title: "Add Server", Icon: Plus, iconColor: "text-amber-500 dark:text-amber-400", path: '/add-server' },
   ];
 
@@ -156,7 +154,7 @@ export default function Home() {
         </p>
       </header>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 w-full max-w-xs sm:max-w-2xl lg:max-w-5xl relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 w-full max-w-xs sm:max-w-2xl lg:max-w-3xl relative z-10">
         {tilesData.map((tile, index) => (
           <Tile
             key={tile.title}
