@@ -99,6 +99,25 @@ cat <<EOF > "$POLICY_HCL_FILE"
 path "secret/data/ssh/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
+# Access for targets path
+path "secret/data/ssh/targets/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+path "secret/metadata/ssh/targets/*" {
+  capabilities = ["list", "delete"]
+}
+path "secret/metadata/ssh/targets" {
+  capabilities = ["list"]
+}
+path "secret/data/ssh/downloads/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+path "secret/metadata/ssh/downloads/*" {
+  capabilities = ["list", "delete"]
+}
+path "secret/metadata/ssh/downloads" {
+  capabilities = ["list"]
+}
 # ... [rest of policy content unchanged] ...
 EOF
 
