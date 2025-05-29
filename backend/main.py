@@ -170,6 +170,11 @@ async def download_file(target_id: str, remote_path: str = Form(...)):
     try:
         secret_response = client.secrets.kv.v2.read_secret_version(path=f"ssh/targets/{target_id}_secrets")
         secrets = secret_response['data']['data']
+        # If using deduplication, fetch credentials by hash
+        if 'cred_hash' in secrets:
+            cred_hash = secrets['cred_hash']
+            cred = client.secrets.kv.v2.read_secret_version(path=f"ssh/credentials/{cred_hash}")['data']['data']
+            secrets = {**secrets, **cred}
     except Exception:
         raise HTTPException(status_code=404, detail="Secrets not found for Server access")
 
@@ -214,16 +219,12 @@ async def upload_to_server(
     if not filename.strip():
         raise HTTPException(status_code=400, detail="filename cannot be empty")
 
-    # Check if the alias (target_id) matches the file's alias
-    # The file must be in the form {target_id}_filename in ssh/uploads
     expected_prefix = f"{target_id}_"
     if not filename or not filename.startswith(expected_prefix):
         raise HTTPException(status_code=400, detail="Filename does not match the target_id alias.")
-    # Remove the alias prefix for the actual filename on the server
     actual_filename = filename[len(expected_prefix):]
     vault_path = f"ssh/uploads/{filename}"
 
-    # Step 1: Read from Vault
     try:
         vault_data = client.secrets.kv.v2.read_secret_version(path=vault_path)
         base64_content = vault_data['data']['data']['base64_content']
@@ -231,14 +232,16 @@ async def upload_to_server(
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Failed to read file from Vault: {str(e)}")
 
-    # Step 2: Get server secrets
     try:
         secret_response = client.secrets.kv.v2.read_secret_version(path=f"ssh/targets/{target_id}_secrets")
         secrets = secret_response['data']['data']
+        if 'cred_hash' in secrets:
+            cred_hash = secrets['cred_hash']
+            cred = client.secrets.kv.v2.read_secret_version(path=f"ssh/credentials/{cred_hash}")['data']['data']
+            secrets = {**secrets, **cred}
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Secrets not found for Server access: {str(e)}")
 
-    # Step 3: Transfer to server via Bastion
     try:
         transfer_file_through_bastion(
             bastion_host=secrets['bastion_host'],
@@ -278,9 +281,16 @@ async def list_files(target_id: str):
     try:
         response = client.secrets.kv.v2.list_secrets(path="ssh/downloads")
         keys = response['data'].get('keys', [])
-        filtered_files = [
-            key[len(target_id)+1:] for key in keys if key.startswith(f"{target_id}_") and not key.endswith("/")
-        ]
+        # Filter only files that exist as secrets (not folders)
+        filtered_files = []
+        for key in keys:
+            if key.startswith(f"{target_id}_") and not key.endswith("/"):
+                # Check if the secret actually exists (not just a folder)
+                try:
+                    client.secrets.kv.v2.read_secret_version(path=f"ssh/downloads/{key}")
+                    filtered_files.append(key[len(target_id)+1:])
+                except Exception:
+                    continue
         if not filtered_files:
             raise HTTPException(status_code=404, detail="No files found for target_id")
         return sorted(filtered_files)
