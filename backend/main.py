@@ -18,8 +18,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-VAULT_ADDR = os.getenv("VAULT_ADDR", "http://localhost:8200")
-VAULT_TOKEN_FILE = os.getenv("VAULT_TOKEN_FILE")
+VAULT_ADDR = os.getenv("VAULT_ADDR", "http://vault:8200")
+VAULT_TOKEN_FILE = os.getenv("VAULT_TOKEN_FILE", "/vault/file/app_token")
 
 if VAULT_TOKEN_FILE and os.path.exists(VAULT_TOKEN_FILE):
     with open(VAULT_TOKEN_FILE, "r") as f:
@@ -78,6 +78,10 @@ async def add_server(
         raise HTTPException(status_code=400, detail="Bastion key is not in valid PEM format")
     if not is_pem_format(target_key_content):
         raise HTTPException(status_code=400, detail="Target key is not in valid PEM format")
+    
+    # Validate vault app token exists and is valid
+    if not client.is_authenticated():
+        raise HTTPException(status_code=500, detail="Vault authentication failed. Please check Vault token and address.")
 
     secret_data = {
         "bastion_host": bastion_host,
@@ -91,7 +95,17 @@ async def add_server(
     try:
         client.secrets.kv.v2.create_or_update_secret(path=f"ssh/targets/{target_id}_secrets", secret=secret_data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to store secrets in Vault: {str(e)}")
+        import traceback
+        tb = traceback.format_exc()
+        # Check for permission denied
+        if hasattr(e, 'errors') and any('permission denied' in err.lower() for err in e.errors):
+            raise HTTPException(status_code=403, detail=(e.errors))
+        elif 'permission denied' in str(e).lower():
+            raise HTTPException(status_code=403, detail="Permission denied when storing secrets in Vault. Please check Vault policy and token.")
+        else:
+            # Log traceback for debugging (could be to a file or monitoring system)
+            print(f"Vault error while storing secrets: {e}\nTraceback: {tb}")
+            raise HTTPException(status_code=500, detail=f"Failed to store secrets in Vault: {str(e)}")
 
     return {"status": f"{target_id}_secrets stored in Vault"}
 
