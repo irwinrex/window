@@ -53,6 +53,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         },
     )
 
+
+import hashlib
+import json
+
+
+# Enhanced: Support multiple target_ids, bastion_hosts, target_hosts (comma-separated)
 @app.post("/add-server")
 async def add_server(
     target_id: str = Form(...),
@@ -78,36 +84,74 @@ async def add_server(
         raise HTTPException(status_code=400, detail="Bastion key is not in valid PEM format")
     if not is_pem_format(target_key_content):
         raise HTTPException(status_code=400, detail="Target key is not in valid PEM format")
-    
-    # Validate vault app token exists and is valid
+
     if not client.is_authenticated():
         raise HTTPException(status_code=500, detail="Vault authentication failed. Please check Vault token and address.")
 
-    secret_data = {
-        "bastion_host": bastion_host,
-        "target_host": target_host,
+    # Split comma-separated fields
+    target_ids = [tid.strip() for tid in target_id.split(",") if tid.strip()]
+    bastion_hosts = [bh.strip() for bh in bastion_host.split(",") if bh.strip()]
+    target_hosts = [th.strip() for th in target_host.split(",") if th.strip()]
+
+    if not (len(target_ids) == len(bastion_hosts) == len(target_hosts)):
+        raise HTTPException(status_code=400, detail="target_id, bastion_host, and target_host must have the same number of comma-separated values.")
+
+    # Deduplication logic: hash all credential fields (users and keys only)
+    cred_dict = {
         "username_bastion": username_bastion,
         "username_target": username_target,
         "bastion_key": bastion_key_content,
         "target_key": target_key_content,
     }
+    cred_json = json.dumps(cred_dict, sort_keys=True)
+    cred_hash = hashlib.sha256(cred_json.encode()).hexdigest()
+    cred_vault_path = f"ssh/credentials/{cred_hash}"
 
+    # Store credentials if not already present
     try:
-        client.secrets.kv.v2.create_or_update_secret(path=f"ssh/targets/{target_id}_secrets", secret=secret_data)
+        try:
+            client.secrets.kv.v2.read_secret_version(path=cred_vault_path)
+            # Already exists, do nothing
+        except Exception:
+            # Not found, create
+            client.secrets.kv.v2.create_or_update_secret(path=cred_vault_path, secret=cred_dict)
     except Exception as e:
         import traceback
         tb = traceback.format_exc()
-        # Check for permission denied
         if hasattr(e, 'errors') and any('permission denied' in err.lower() for err in e.errors):
             raise HTTPException(status_code=403, detail=(e.errors))
         elif 'permission denied' in str(e).lower():
-            raise HTTPException(status_code=403, detail="Permission denied when storing secrets in Vault. Please check Vault policy and token.")
+            raise HTTPException(status_code=403, detail="Permission denied when storing credentials in Vault. Please check Vault policy and token.")
         else:
-            # Log traceback for debugging (could be to a file or monitoring system)
-            print(f"Vault error while storing secrets: {e}\nTraceback: {tb}")
-            raise HTTPException(status_code=500, detail=f"Failed to store secrets in Vault: {str(e)}")
+            print(f"Vault error while storing credentials: {e}\nTraceback: {tb}")
+            raise HTTPException(status_code=500, detail=f"Failed to store credentials in Vault: {str(e)}")
 
-    return {"status": f"{target_id}_secrets stored in Vault"}
+    # For each server, store mapping from target_id to credential hash and its hosts
+    results = []
+    for tid, bh, th in zip(target_ids, bastion_hosts, target_hosts):
+        target_vault_path = f"ssh/targets/{tid}_secrets"
+        try:
+            client.secrets.kv.v2.create_or_update_secret(
+                path=target_vault_path,
+                secret={
+                    "cred_hash": cred_hash,
+                    "bastion_host": bh,
+                    "target_host": th,
+                }
+            )
+            results.append({"target_id": tid, "bastion_host": bh, "target_host": th, "cred_hash": cred_hash})
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            if hasattr(e, 'errors') and any('permission denied' in err.lower() for err in e.errors):
+                raise HTTPException(status_code=403, detail=(e.errors))
+            elif 'permission denied' in str(e).lower():
+                raise HTTPException(status_code=403, detail="Permission denied when storing target mapping in Vault. Please check Vault policy and token.")
+            else:
+                print(f"Vault error while storing target mapping: {e}\nTraceback: {tb}")
+                raise HTTPException(status_code=500, detail=f"Failed to store target mapping in Vault: {str(e)}")
+
+    return {"status": "success", "servers": results}
 
 @app.post("/download-file/{target_id}")
 async def download_file(target_id: str, remote_path: str = Form(...)):
