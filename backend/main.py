@@ -88,13 +88,22 @@ async def add_server(
     if not client.is_authenticated():
         raise HTTPException(status_code=500, detail="Vault authentication failed. Please check Vault token and address.")
 
+
     # Split comma-separated fields
     target_ids = [tid.strip() for tid in target_id.split(",") if tid.strip()]
     bastion_hosts = [bh.strip() for bh in bastion_host.split(",") if bh.strip()]
     target_hosts = [th.strip() for th in target_host.split(",") if th.strip()]
 
+    # If only one bastion_host is provided, use it for all targets
+    if len(bastion_hosts) == 1 and len(target_ids) > 1:
+        bastion_hosts = bastion_hosts * len(target_ids)
+
+    # If bastion_hosts is empty, use target_hosts for all
+    if len(bastion_hosts) == 0:
+        bastion_hosts = target_hosts.copy()
+
     if not (len(target_ids) == len(bastion_hosts) == len(target_hosts)):
-        raise HTTPException(status_code=400, detail="target_id, bastion_host, and target_host must have the same number of comma-separated values.")
+        raise HTTPException(status_code=400, detail="target_id, bastion_host, and target_host must have the same number of comma-separated values (or provide a single bastion_host for all targets).")
 
     # Deduplication logic: hash all credential fields (users and keys only)
     cred_dict = {
