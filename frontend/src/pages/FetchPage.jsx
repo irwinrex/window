@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const FetchPage = () => {
   const [targetId, setTargetId] = useState("");
@@ -8,6 +9,7 @@ const FetchPage = () => {
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState("");
+  const navigate = useNavigate();
 
   const getFilename = (path) => {
     return path.split("/").filter(Boolean).pop() || "";
@@ -104,7 +106,16 @@ const FetchPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 max-w-3xl mx-auto relative">
+      {/* Home Menu Key - always visible, not covered by banners */}
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="fixed top-20 left-4 sm:top-24 sm:left-6 z-[100] p-3 rounded-full bg-white/70 dark:bg-gray-800/70 border border-white/30 dark:border-gray-700/50 shadow-lg hover:bg-white/90 dark:hover:bg-gray-700/90 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-all duration-200"
+        aria-label="Go to Home"
+      >
+        <span className="font-bold text-indigo-500 dark:text-indigo-300">Home</span>
+      </button>
       <h2 className="text-2xl font-bold mb-4">Fetch & Edit File</h2>
 
       {error && <div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>}

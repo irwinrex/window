@@ -14,6 +14,7 @@ import {
   FiGitMerge,
   FiLoader,
   FiX,
+  FiHome,
   FiChevronDown,
   FiChevronUp,
   FiArrowDown,
@@ -388,10 +389,18 @@ const VaultFileEditor = () => {
 
   return (
     <div className="h-screen w-full flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
-      {/* Header Bar: z-30 is important for tooltips from this header to potentially show above editor pane headers (z-20) */}
       <header className="sticky top-0 z-30 flex items-center justify-between gap-4 p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700/60 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm">
         {/* Left side of header: Inputs and main fetch actions */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-4 flex-1">
+          <ActionButton
+              onClick={() => window.location.assign("/")}
+              Icon={FiHome}
+              tooltipText="Fetch Live Version (from Downloads Vault)"
+              isLoading={isLoading.fetchDownload}
+              variant="secondary"
+            >
+              Home
+            </ActionButton>
           <input
             placeholder="Target ID"
             value={targetId}

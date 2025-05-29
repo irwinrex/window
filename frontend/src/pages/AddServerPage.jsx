@@ -1,6 +1,7 @@
 // src/pages/AddServerPage.jsx
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from '../components/ThemeToggle'; // Assuming global or consistently placed
+import { useNavigate } from 'react-router-dom';
 import Tooltip from '../components/Tooltip';
 import { FiSave, FiUpload, FiCheckCircle, FiAlertTriangle, FiX, FiServer, FiFilePlus } from 'react-icons/fi'; // Added FiServer
 
@@ -23,6 +24,7 @@ const ActionButton = ({ onClick, children, Icon, tooltipText, className = '', is
 
 
 const AddServerPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     target_id: '',
     bastion_host: '',
@@ -101,7 +103,16 @@ const AddServerPage = () => {
   ];
 
   return (
-    <div className="h-screen w-full flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
+      <div className="h-screen w-full flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 relative">
+      {/* Home Menu Key - always visible, not covered by banners */}
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="fixed top-20 left-4 sm:top-24 sm:left-6 z-[100] p-3 rounded-full bg-white/70 dark:bg-gray-800/70 border border-white/30 dark:border-gray-700/50 shadow-lg hover:bg-white/90 dark:hover:bg-gray-700/90 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 transition-all duration-200"
+        aria-label="Go to Home"
+      >
+        <span className="font-bold text-indigo-500 dark:text-indigo-300">Home</span>
+      </button>
       {/* Header Bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between gap-4 p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700/60 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm">
         <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
