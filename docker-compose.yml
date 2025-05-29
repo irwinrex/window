@@ -1,39 +1,47 @@
-version: '3.8'
+# version: '3.8'
 services:
 
   vault:
     image: hashicorp/vault:1.19.0
     ports:
-      - "8200:8200"
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: "EeZGlSEjcD9rw5oOzV4W%"
-      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      - "8201:8200"
     cap_add:
       - IPC_LOCK
+    command: ["vault", "server", "-config=/vault/config/vault-config.json"]
     volumes:
       - vault:/vault/file
-    command: "server -dev -dev-root-token-id=EeZGlSEjcD9rw5oOzV4W%"
+      - ./vault-config.json:/vault/config/vault-config.json:ro
+
+  vault-init:
+    build:
+      context: ./vault-init
+      dockerfile: Dockerfile
+    depends_on:
+      - vault
+    volumes:
+      - vault:/vault/file
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
       - backend:/mnt/data
+      - vault:/vault/file:ro
     environment:
       VAULT_ADDR: "http://vault:8200"
-      VAULT_TOKEN: "EeZGlSEjcD9rw5oOzV4W%"
+      VAULT_TOKEN_FILE: "/vault/file/app_token"
       DOWNLOAD_DIR: "/mnt/data"
     ports:
       - "8000:8000"
     depends_on:
       - vault
+      - vault-init
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    # volumes:
-    #   - ./frontend:/app
     ports:
       - "3000:3000"
 

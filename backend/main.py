@@ -19,7 +19,13 @@ app.add_middleware(
 )
 
 VAULT_ADDR = os.getenv("VAULT_ADDR", "http://localhost:8200")
-VAULT_TOKEN = os.getenv("VAULT_TOKEN", "root-token")
+VAULT_TOKEN_FILE = os.getenv("VAULT_TOKEN_FILE")
+
+if VAULT_TOKEN_FILE and os.path.exists(VAULT_TOKEN_FILE):
+    with open(VAULT_TOKEN_FILE, "r") as f:
+        VAULT_TOKEN = f.read().strip()
+else:
+    VAULT_TOKEN = os.getenv("VAULT_TOKEN", "root-token")
 
 client = hvac.Client(url=VAULT_ADDR, token=VAULT_TOKEN)
 
